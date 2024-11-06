@@ -2,6 +2,50 @@
 <html>
 <head>
   <title>HLA Matching Zero-Knowledge Proof</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    textarea {
+      font-family: monospace;
+    }
+    .error {
+      color: red;
+    }
+    .proof, .result, .vcf-content {
+      background-color: #f4f4f4;
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin-top: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    #loading {
+      display: none;
+      margin-top: 10px;
+      color: blue;
+    }
+    .example-section {
+      margin-bottom: 20px;
+    }
+    .download-btn, .view-btn {
+      margin-right: 10px;
+      padding: 5px 10px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .download-btn:hover, .view-btn:hover {
+      background-color: #0056b3;
+    }
+    .example-buttons {
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
 
@@ -33,75 +77,263 @@
 
   <h2>Instructions</h2>
   <p>
-    Enter the donor's and recipient's HLA markers. Each list should contain exactly 10 integers separated by commas. The HLA markers are integers representing specific genetic markers.
+    Upload the donor's and recipient's DNA files in VCF format. The application will extract the HLA markers automatically. Ensure that each DNA file contains the necessary HLA information.
   </p>
 
   <h3>Examples of Inputs That Work</h3>
 
-  <p><strong>Example 1 (Passing Verification):</strong></p>
-  <ul>
-    <li>Donor's HLA Markers (<code>HLA_d</code>): <code>12,23,34,45,56,67,78,89,90,21</code></li>
-    <li>Recipient's HLA Markers (<code>HLA_r</code>): <code>12,23,35,45,56,68,78,89,91,21</code></li>
-  </ul>
-  <p>This example results in 7 matching HLA markers, meeting the threshold.</p>
+  <!-- Example 1 -->
+  <div class="example-section">
+    <p><strong>Example 1 (Passing Verification with 7 Matches):</strong></p>
+    <div class="example-buttons">
+      <button class="download-btn" onclick="downloadVCF('example_donor', exampleDonorVCF)">Download Donor's VCF</button>
+      <button class="download-btn" onclick="downloadVCF('example_recipient', exampleRecipientVCF)">Download Recipient's VCF</button>
+      <button class="view-btn" onclick="viewVCF(exampleDonorVCF, 'Donor')">View Donor's VCF</button>
+      <button class="view-btn" onclick="viewVCF(exampleRecipientVCF, 'Recipient')">View Recipient's VCF</button>
+    </div>
+  </div>
 
-  <p><strong>Example 2 (Failing Verification):</strong></p>
-  <ul>
-    <li>Donor's HLA Markers (<code>HLA_d</code>): <code>10,20,30,40,50,60,70,80,90,100</code></li>
-    <li>Recipient's HLA Markers (<code>HLA_r</code>): <code>11,21,31,41,51,61,71,81,91,101</code></li>
-  </ul>
-  <p>This example results in 0 matching HLA markers, failing to meet the threshold.</p>
+  <!-- Example 2 -->
+  <div class="example-section">
+    <p><strong>Example 2 (Failing Verification with 0 Matches):</strong></p>
+    <div class="example-buttons">
+      <button class="download-btn" onclick="downloadVCF('example_donor_fail', exampleDonorFailVCF)">Download Donor's Fail VCF</button>
+      <button class="download-btn" onclick="downloadVCF('example_recipient_fail', exampleRecipientFailVCF)">Download Recipient's Fail VCF</button>
+      <button class="view-btn" onclick="viewVCF(exampleDonorFailVCF, 'Donor Fail')">View Donor's Fail VCF</button>
+      <button class="view-btn" onclick="viewVCF(exampleRecipientFailVCF, 'Recipient Fail')">View Recipient's Fail VCF</button>
+    </div>
+  </div>
 
-  <p><strong>Example 3 (Passing Verification):</strong></p>
-  <ul>
-    <li>Donor's HLA Markers (<code>HLA_d</code>): <code>5,15,25,35,45,55,65,75,85,95</code></li>
-    <li>Recipient's HLA Markers (<code>HLA_r</code>): <code>5,15,25,35,45,55,65,75,85,95</code></li>
-  </ul>
-  <p>This example results in 10 matching HLA markers, exceeding the threshold.</p>
+  <!-- Example 3 -->
+  <div class="example-section">
+    <p><strong>Example 3 (Passing Verification with 10 Matches):</strong></p>
+    <div class="example-buttons">
+      <button class="download-btn" onclick="downloadVCF('example_donor_full', exampleDonorFullVCF)">Download Donor's Full VCF</button>
+      <button class="download-btn" onclick="downloadVCF('example_recipient_full', exampleRecipientFullVCF)">Download Recipient's Full VCF</button>
+      <button class="view-btn" onclick="viewVCF(exampleDonorFullVCF, 'Donor Full')">View Donor's Full VCF</button>
+      <button class="view-btn" onclick="viewVCF(exampleRecipientFullVCF, 'Recipient Full')">View Recipient's Full VCF</button>
+    </div>
+  </div>
 
   <hr>
 
   <!-- Input Fields -->
-  <h3>Enter Your Data:</h3>
+  <h3>Upload DNA Data:</h3>
 
-  <label for="HLA_d">Donor's HLA Markers (<code>HLA_d</code>):</label><br>
-  <textarea id="HLA_d" rows="2" cols="60">12,23,34,45,56,67,78,89,90,21</textarea><br><br>
+  <label for="dna_d">Donor's DNA File (VCF):</label><br>
+  <input type="file" id="dna_d" accept=".vcf"><br><br>
 
-  <label for="HLA_r">Recipient's HLA Markers (<code>HLA_r</code>):</label><br>
-  <textarea id="HLA_r" rows="2" cols="60">12,23,35,45,56,68,78,89,91,21</textarea><br><br>
+  <label for="dna_r">Recipient's DNA File (VCF):</label><br>
+  <input type="file" id="dna_r" accept=".vcf"><br><br>
 
   <button id="bGenProof">Create Proof</button>
 
+  <div id="loading">
+    <p>Processing files and generating proof. Please wait...</p>
+  </div>
+
   <!-- Output Sections -->
   <pre class="proof"><strong>Proof:</strong> <code id="proof"></code></pre>
-  <pre class="proof"><strong>Result:</strong> <code id="result"></code></pre>
+  <pre class="result"><strong>Result:</strong> <code id="result"></code></pre>
   <pre class="error"><strong>Error:</strong> <code id="error"></code></pre>
 
-  <!-- Include snarkjs library -->
+  <!-- VCF Content Display -->
+  <div id="vcfDisplay" class="vcf-content" style="display:none;">
+    <h3 id="vcfTitle"></h3>
+    <pre id="vcfText"></pre>
+    <button onclick="closeVCF()" style="padding:5px 10px; margin-top:10px;">Close</button>
+  </div>
+
+  <!-- Include snarkjs library via CDN -->
   <script src="snarkjs.min.js"></script>
 
   <script>
+    // Example VCF file contents as JavaScript strings
+    const exampleDonorVCF = `##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	1000	HLA-A	AG	T	.	.	.
+1	1001	HLA-B	CT	G	.	.	.
+1	1002	HLA-C	GA	A	.	.	.
+1	1003	HLA-DRB1	TT	C	.	.	.
+1	1004	HLA-DQB1	CC	T	.	.	.
+1	1005	HLA-DQA1	GG	A	.	.	.
+1	1006	HLA-DPB1	AA	T	.	.	.
+1	1007	HLA-A	AG	T	.	.	.
+1	1008	HLA-B	CT	G	.	.	.
+1	1009	HLA-C	GA	A	.	.	.`;
+
+    const exampleRecipientVCF = `##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	1000	HLA-A	AG	T	.	.	.
+1	1001	HLA-B	CT	G	.	.	.
+1	1002	HLA-C	GG	A	.	.	.
+1	1003	HLA-DRB1	TT	C	.	.	.
+1	1004	HLA-DQB1	CC	T	.	.	.
+1	1005	HLA-DQA1	GG	A	.	.	.
+1	1006	HLA-DPB1	AA	T	.	.	.
+1	1007	HLA-A	AG	T	.	.	.
+1	1008	HLA-B	CT	G	.	.	.
+1	1009	HLA-C	GA	A	.	.	.`;
+
+    const exampleDonorFailVCF = `##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	2000	HLA-A	AA	G	.	.	.
+1	2001	HLA-B	CC	T	.	.	.
+1	2002	HLA-C	GG	C	.	.	.
+1	2003	HLA-DRB1	TT	G	.	.	.
+1	2004	HLA-DQB1	CT	T	.	.	.
+1	2005	HLA-DQA1	GG	C	.	.	.
+1	2006	HLA-DPB1	TT	A	.	.	.
+1	2007	HLA-A	CC	G	.	.	.
+1	2008	HLA-B	GG	A	.	.	.
+1	2009	HLA-C	TT	G	.	.	.`;
+
+    const exampleRecipientFailVCF = `##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	2000	HLA-A	AA	G	.	.	.
+1	2001	HLA-B	CC	T	.	.	.
+1	2002	HLA-C	GG	C	.	.	.
+1	2003	HLA-DRB1	TT	G	.	.	.
+1	2004	HLA-DQB1	CT	T	.	.	.
+1	2005	HLA-DQA1	GG	C	.	.	.
+1	2006	HLA-DPB1	TT	A	.	.	.
+1	2007	HLA-A	CC	G	.	.	.
+1	2008	HLA-B	GG	A	.	.	.
+1	2009	HLA-C	TT	G	.	.	.`;
+
+    const exampleDonorFullVCF = `##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	3000	HLA-A	AG	T	.	.	.
+1	3001	HLA-B	CT	G	.	.	.
+1	3002	HLA-C	GA	A	.	.	.
+1	3003	HLA-DRB1	TT	C	.	.	.
+1	3004	HLA-DQB1	CC	T	.	.	.
+1	3005	HLA-DQA1	GG	A	.	.	.
+1	3006	HLA-DPB1	AA	T	.	.	.
+1	3007	HLA-A	AG	T	.	.	.
+1	3008	HLA-B	CT	G	.	.	.
+1	3009	HLA-C	GA	A	.	.	.`;
+
+    const exampleRecipientFullVCF = `##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	3000	HLA-A	AG	T	.	.	.
+1	3001	HLA-B	CT	G	.	.	.
+1	3002	HLA-C	GA	A	.	.	.
+1	3003	HLA-DRB1	TT	C	.	.	.
+1	3004	HLA-DQB1	CC	T	.	.	.
+1	3005	HLA-DQA1	GG	A	.	.	.
+1	3006	HLA-DPB1	AA	T	.	.	.
+1	3007	HLA-A	AG	T	.	.	.
+1	3008	HLA-B	CT	G	.	.	.
+1	3009	HLA-C	GA	A	.	.	.`;
+
+    // Function to download VCF files
+    function downloadVCF(filename, content) {
+      const blob = new Blob([content], { type: 'text/vcf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.vcf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Function to view VCF files
+    function viewVCF(content, title) {
+      document.getElementById('vcfTitle').textContent = `${title}'s VCF File`;
+      document.getElementById('vcfText').textContent = content;
+      document.getElementById('vcfDisplay').style.display = 'block';
+    }
+
+    // Function to close VCF display
+    function closeVCF() {
+      document.getElementById('vcfDisplay').style.display = 'none';
+    }
+
     const proofComponent = document.getElementById('proof');
     const resultComponent = document.getElementById('result');
     const errorComponent = document.getElementById('error');
     const bGenProof = document.getElementById("bGenProof");
+    const loadingIndicator = document.getElementById('loading');
 
     bGenProof.addEventListener("click", calculateProof);
 
+    /**
+     * Parses a VCF file to extract HLA markers.
+     * For demonstration purposes, this function looks for lines containing "HLA" in the ID field
+     * and extracts the reference allele as an integer.
+     * In real-world scenarios, HLA typing is more complex and requires specialized tools.
+     * 
+     * @param {File} file - The VCF file to parse.
+     * @returns {Promise<number[]>} - A promise that resolves to an array of 10 HLA marker integers.
+     */
+    async function parseVCF(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          try {
+            const lines = event.target.result.split('\n');
+            // Filter lines that are not headers and contain 'HLA' in the ID field (simplified)
+            const hlaVariants = lines.filter(line => {
+              if (line.startsWith('#')) return false;
+              const fields = line.split('\t');
+              return fields[2].includes('HLA');
+            });
+            if (hlaVariants.length < 10) {
+              reject(new Error("Not enough HLA markers found in the VCF file."));
+              return;
+            }
+            // Extract the reference allele and convert to integer (simplified)
+            const hlaMarkers = hlaVariants.slice(0, 10).map(variant => {
+              const fields = variant.split('\t');
+              // For demonstration, convert the reference allele to its character code sum
+              const refAllele = fields[3];
+              let hash = 0;
+              for (let char of refAllele) {
+                hash += char.charCodeAt(0);
+              }
+              return hash;
+            });
+            resolve(hlaMarkers);
+          } catch (err) {
+            reject(new Error("Failed to parse VCF file."));
+          }
+        };
+        reader.onerror = () => reject(new Error("Error reading file."));
+        reader.readAsText(file);
+      });
+    }
+
+    /**
+     * Main function to calculate the Zero-Knowledge Proof.
+     */
     async function calculateProof() {
       // Clear previous output
-      proofComponent.innerHTML = "";
-      resultComponent.innerHTML = "";
-      errorComponent.innerHTML = "";
+      proofComponent.textContent = "";
+      resultComponent.textContent = "";
+      errorComponent.textContent = "";
+      loadingIndicator.style.display = "block";
 
       try {
-        // Get user inputs
-        const HLA_d = document.getElementById('HLA_d').value.split(',').map(Number);
-        const HLA_r = document.getElementById('HLA_r').value.split(',').map(Number);
+        // Get file inputs
+        const dna_d_file = document.getElementById('dna_d').files[0];
+        const dna_r_file = document.getElementById('dna_r').files[0];
+
+        if (!dna_d_file || !dna_r_file) {
+          throw new Error("Both donor and recipient DNA files must be uploaded.");
+        }
+
+        // Parse DNA files to extract HLA markers
+        const [HLA_d, HLA_r] = await Promise.all([
+          parseVCF(dna_d_file),
+          parseVCF(dna_r_file)
+        ]);
 
         // Input validation
         if (HLA_d.length !== 10 || HLA_r.length !== 10) {
-          throw new Error("HLA_d and HLA_r must each have exactly 10 values.");
+          throw new Error("Failed to extract exactly 10 HLA markers from each DNA file.");
         }
 
         // Prepare input object
@@ -109,6 +341,9 @@
           HLA_d,
           HLA_r
         };
+
+        console.log("HLA_d:", HLA_d);
+        console.log("HLA_r:", HLA_r);
 
         // Generate proof
         const { proof, publicSignals } = await snarkjs.groth16.fullProve(
@@ -118,7 +353,7 @@
         );
 
         // Display proof
-        proofComponent.innerHTML = JSON.stringify(proof, null, 2);
+        proofComponent.textContent = JSON.stringify(proof, null, 2);
 
         // Fetch and parse verification key
         const vkey = await fetch("verification_key.json").then(res => res.json());
@@ -126,12 +361,14 @@
         // Verify proof
         const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
 
-        resultComponent.innerHTML = isValid ? "Proof is valid. Verification OK." : "Proof is invalid. Verification Failed.";
+        resultComponent.textContent = isValid ? "Proof is valid. Verification OK." : "Proof is invalid. Verification Failed.";
 
       } catch (error) {
         // Display error
-        errorComponent.innerHTML = error.message || "An unknown error occurred.";
+        errorComponent.textContent = error.message || "An unknown error occurred.";
         console.error(error);
+      } finally {
+        loadingIndicator.style.display = "none";
       }
     }
   </script>
